@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "centralindia"
+        },
+        "resourceGroupName": {
+            "value": "rg-avd"
+        },
+        "hostPoolName": {
+            "value": "hp-avd"
+        },
+        "applicationGroupName": {
+            "value": "ag-avd"
+        },
+        "workspaceName": {
+            "value": "ws-avd"
+        },
+        "virtualNetworkName": {
+            "value": "vnet-avd"
+        },
+        "vnetCIDR": {
+            "value": "10.0.0.0/16"
+        },
+        "subnets": {
+            "value": [
+                {
+                    "name": "subnet1",
+                    "addressPrefix": "10.0.0.0/24"
+                },
+                {
+                    "name": "subnet2",
+                    "addressPrefix": "10.0.1.0/24"
+                }
+            ]
+        },
+        "vmName": {
+            "value": "vm-avd-001"
+        },
+        "vmSize": {
+            "value": "Standard_B1ms"
+        },
+        "adminUsername": {
+            "value": "azadmin"
+        },
+        "adminPassword": {
+            "value": "123!@#ABCabc"
+        },
+        "OSVersion": {
+            "value": "win11-22h2-avd"
+        },
+        "securityType": {
+            "value": "Standard"
+        },
+        "userEmails": {
+            "value": [
+                "DP@badboy137outlook.onmicrosoft.com",
+                "demo@badboy137outlook.onmicrosoft.com"
+            ]
+        },
+        "tags": {
+            "value": {
+                "Created By": "Bicep"
+            }
+        }
+    }
+}
