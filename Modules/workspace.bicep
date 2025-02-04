@@ -1,13 +1,8 @@
 param location string
-
 param tags object
-
 param workspaceName string
-
 param publicNetworkAccess string = 'Enabled'
-
 param applicationGroupId string
-
 param applicationGroupReferences array = [
   applicationGroupId
 ]

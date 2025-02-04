@@ -3,7 +3,6 @@ param virtualNetworkName string = 'avd-vnet'
 param tags object
 
 param virtualNetworkCIDR string = '10.0.0.0/16'
-
 param subnets array = [
   {
     name: 'subnet1'
@@ -38,7 +37,6 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
     ]
   }
 }
-
 
 output virtualNetworkId string = virtualNetwork.id
 output virtualNetworkName string = virtualNetwork.name
