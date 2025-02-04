@@ -50,8 +50,8 @@
         "adminUsername": {
             "value": "azadmin"
         },
-        "adminPassword": {
-            "value": "123!@#ABCabc"
+        "keyVaultObjectId": {
+            "value": "b9e591e0-7fdf-40b4-8379-b6e6e5b4d48f"
         },
         "userPrincipalIds": {
             "value": [

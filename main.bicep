@@ -33,7 +33,9 @@ param subnets array = [
 
 // Virtual Machine params
 param adminUsername string = 'azadmin'
-param adminPassword string = '123!@#ABCabc'
+@description('Object ID of the user/service principal that needs access to Key Vault')
+param keyVaultObjectId string
+param keyVaultName string = 'kv-${resourceGroupName}'
 param OSVersion string = 'win11-22h2-avd'
 param vmSize string = 'Standard_B1ms'
 param vmName string = 'vm-avd-001'
@@ -87,6 +89,20 @@ module workspace 'Modules/workspace.bicep' = {
   }
 }
 
+module keyVault 'Modules/keyVault.bicep' = {
+  name: '${keyVaultName}-${date}'
+  scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    RG
+  ]
+  params: {
+    keyVaultName: keyVaultName
+    location: location
+    tags: tags
+    objectId: keyVaultObjectId
+  }
+}
+
 module vm 'Modules/virtualMachine.bicep' = {
   name: '${vmName}-${date}'
   scope: resourceGroup(resourceGroupName)
@@ -99,7 +115,7 @@ module vm 'Modules/virtualMachine.bicep' = {
     location: location
     tags: tags
     adminUsername: adminUsername
-    adminPassword: adminPassword
+    adminPassword: '@Microsoft.KeyVault(secretUri=https://${keyVault.outputs.keyVaultName}.vault.azure.net/secrets/vmAdminPassword)'
     sku: OSVersion
     securityType: securityType
     aadJoin: true
