@@ -15,8 +15,8 @@ param sku string = 'win11-22h2-avd'
 param version string = ''
 param tags object
 
-@description('Array of user email addresses to grant access')
-param userEmails array = []
+@description('Array of user principal IDs to grant access')
+param userPrincipalIds array = []
 param principalType string = 'User'
 
 @allowed([
@@ -131,14 +131,14 @@ resource sessionHostAVDAgent 'Microsoft.Compute/virtualMachines/extensions@2024-
   dependsOn: [
     vm
   ]
-  name: '${vmName}/AVDAgent'
+  name: '${sessionHostName}/AVDAgent'
   location: location
   tags: tags
   properties: {
     publisher: 'Microsoft.Powershell'
     type: 'DSC'
-    typeHandlerVersion: '2.2.83.5'
-    autoUpgradeMinorVersion: true
+    typeHandlerVersion: '2.83'
+    // autoUpgradeMinorVersion: true
     settings: {
       modulesUrl: dscURL
       configurationFunction: 'Configuration.ps1\\AddSessionHost'
@@ -161,27 +161,56 @@ resource sessionHostAADLogin 'Microsoft.Compute/virtualMachines/extensions@2024-
   properties: {
     publisher: 'Microsoft.Azure.ActiveDirectory'
     type: 'AADLoginForWindows'
-    typeHandlerVersion: '2.2.0.0'
-    autoUpgroveMinorVersion: true
+    typeHandlerVersion: '2.2'
+    autoUpgradeMinorVersion: true
+  }
+}
+
+resource guestAttestation 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = {
+  dependsOn: [
+    vm
+  ]
+  name: '${sessionHostName}/GuestAttestation'
+  // parent: vm
+  location: location
+  properties: {
+    publisher: 'Microsoft.Azure.Security.WindowsAttestation'
+    type: 'GuestAttestation'
+    typeHandlerVersion: '1.0'
+    autoUpgradeMinorVersion: true
+    settings: {
+      AttestationConfig: {
+        MaaSettings: {
+          maaEndpoint: ''
+          maaTenantName: 'GuestAttestation'
+        }
+        AscSettings: {
+          ascReportingEndpoint: ''
+          ascReportingFrequency: ''
+        }
+        useCustomToken: 'false'
+        disableAlerts: 'false'
+      }
+    }
   }
 }
 
 // Role assignments for Virtual Machine User Login
-resource vmUserLoginRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for userEmail in userEmails: {
-  name: guid(resourceGroup().id, userEmail, virtualMachineUserLoginRoleId)
+resource vmUserLoginRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for principalId in userPrincipalIds: {
+  name: guid(resourceGroup().id, principalId, virtualMachineUserLoginRoleId)
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', virtualMachineUserLoginRoleId)
-    principalId: reference(resourceId('Microsoft.AAD/users', userEmail), '2024-01-01', 'Full').id
+    principalId: principalId
     principalType: principalType
   }
 }]
 
 // Role assignments for Desktop Virtualization User
-resource desktopVirtualizationUserRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for userEmail in userEmails: {
-  name: guid(resourceGroup().id, userEmail, desktopVirtualizationUserRoleId)
+resource desktopVirtualizationUserRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for principalId in userPrincipalIds: {
+  name: guid(resourceGroup().id, principalId, desktopVirtualizationUserRoleId)
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', desktopVirtualizationUserRoleId)
-    principalId: reference(resourceId('Microsoft.AAD/users', userEmail), '2024-01-01', 'Full').id
+    principalId: principalId
     principalType: principalType
   }
 }]

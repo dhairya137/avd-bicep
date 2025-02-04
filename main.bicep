@@ -39,7 +39,7 @@ param vmSize string = 'Standard_B1ms'
 param vmName string = 'vm-avd-001'
 param securityType string = 'Standard'
 
-param userEmails array = []
+param userPrincipalIds array = []
 
 module RG 'Modules/resourceGroup.bicep' = {
   name: '${resourceGroupName}-${date}'
@@ -110,7 +110,7 @@ module vm 'Modules/virtualMachine.bicep' = {
     vmSize: vmSize
     virtualNetworkName: virtualNetworkName
     subnetName: subnets[0].name
-    userEmails: userEmails
+    userPrincipalIds: userPrincipalIds
   }
 }
 
