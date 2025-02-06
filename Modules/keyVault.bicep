@@ -6,6 +6,9 @@ param tenantId string = subscription().tenantId
 @description('Object ID of the user/service principal that needs access to Key Vault')
 param objectId string
 
+@description('Additional access policies to add to the Key Vault')
+param additionalAccessPolicies array = []
+
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
@@ -15,7 +18,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enabledForDiskEncryption: true
     enabledForTemplateDeployment: true
     tenantId: tenantId
-    accessPolicies: [
+    accessPolicies: concat([
       {
         tenantId: tenantId
         objectId: objectId
@@ -27,7 +30,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
           ]
         }
       }
-    ]
+    ], additionalAccessPolicies)
     sku: {
       name: 'standard'
       family: 'A'

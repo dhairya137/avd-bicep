@@ -67,6 +67,19 @@ module virtualNetwork 'Modules/virtualNetwork.bicep' = {
   }
 }
 
+module hostpool 'Modules/hostPool.bicep' = {
+  dependsOn: [
+    RG
+  ]
+  name: '${hostPoolName}-${date}'
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    hostPoolName: hostPoolName
+    location: location
+    tags: tags
+  }
+}
+
 module applicationGroup 'Modules/applicationGroup.bicep' = {
   name: '${applicationGroupName}-${date}'
   scope: resourceGroup(resourceGroupName)
@@ -109,18 +122,18 @@ module vm 'Modules/virtualMachine.bicep' = {
   dependsOn: [
     RG
     virtualNetwork
-    workspace
+    keyVault
   ]
   params: {
     location: location
     tags: tags
     adminUsername: adminUsername
-    adminPassword: '@Microsoft.KeyVault(secretUri=https://${keyVault.outputs.keyVaultName}.vault.azure.net/secrets/vmAdminPassword)'
+    keyVaultName: keyVaultName
     sku: OSVersion
     securityType: securityType
     aadJoin: true
     hostpoolToken: hostpool.outputs.registrationInfoToken
-    HostPoolName: hostpool.name
+    HostPoolName: hostpool.outputs.hostpoolName
     sessionHostName: vmName
     vmName: vmName
     vmSize: vmSize
@@ -130,15 +143,14 @@ module vm 'Modules/virtualMachine.bicep' = {
   }
 }
 
-module hostpool 'Modules/hostPool.bicep' = {
-  dependsOn: [
-    RG
-  ]
-  name: '${hostPoolName}-${date}'
+module keyVaultAccessPolicy 'Modules/keyVaultAccessPolicy.bicep' = {
+  name: '${keyVaultName}-access-policy-${date}'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    vm
+  ]
   params: {
-    hostPoolName: hostPoolName
-    location: location
-    tags: tags
+    keyVaultName: keyVaultName
+    vmPrincipalId: reference(resourceId(subscription().subscriptionId, resourceGroupName, 'Microsoft.Compute/virtualMachines', vmName), '2024-07-01', 'Full').identity.principalId
   }
 }

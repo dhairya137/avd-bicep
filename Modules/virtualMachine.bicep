@@ -5,10 +5,11 @@ param vmName string = 'avd-vm'
 param vmSize string = 'Standard_D4s_v3'
 @description('Username for the Virtual Machine.')
 param adminUsername string = 'azadmin'
-@description('Password for the Virtual Machine.')
-@minLength(12)
-@secure()
-param adminPassword string = '123!@#ABCabc'
+@description('Name of the Key Vault containing admin password')
+param keyVaultName string
+
+@description('Enable system assigned managed identity for the VM')
+param enableSystemAssignedIdentity bool = true
 param offer string = 'windows-11'
 param publisher string = 'microsoftwindowsdesktop'
 param sku string = 'win11-22h2-avd'
@@ -85,6 +86,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: vmName
   location: location
   tags: tags
+  identity: {
+    type: enableSystemAssignedIdentity ? 'SystemAssigned' : 'None'
+  }
   properties: {
     hardwareProfile: {
       vmSize: vmSize
@@ -92,7 +96,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
-      adminPassword: adminPassword
+      adminPassword: reference(resourceId('Microsoft.KeyVault/vaults/secrets', keyVaultName, 'vmAdminPassword'), '2023-07-01').secretUriWithVersion
     }
     storageProfile: {
       imageReference: {

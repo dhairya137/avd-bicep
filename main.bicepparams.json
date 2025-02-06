@@ -18,7 +18,7 @@
             ]
         },
         "OSVersion": {
-            "value": "win11-22h2-avd"
+            "value": "win11-24h2-avd"
         },
         "vmSize": {
             "value": "Standard_B1ms"
@@ -48,7 +48,7 @@
             "value": "vm-avd-001"
         },
         "adminUsername": {
-            "value": "azadmin"
+            "value": "azzadmin"
         },
         "keyVaultObjectId": {
             "value": "b9e591e0-7fdf-40b4-8379-b6e6e5b4d48f"
