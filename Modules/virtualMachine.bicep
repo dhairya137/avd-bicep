@@ -97,6 +97,10 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       computerName: vmName
       adminUsername: adminUsername
       adminPassword: reference(resourceId('Microsoft.KeyVault/vaults/secrets', keyVaultName, 'vmAdminPassword'), '2023-07-01').secretUriWithVersion
+      windowsConfiguration: {
+        enableAutomaticUpdates: true
+        provisionVMAgent: true
+      }
     }
     storageProfile: {
       imageReference: {
@@ -131,18 +135,34 @@ param aadJoin bool = true
 
 var dscURL = 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_01-20-2022.zip'
 
+resource joinAAD 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
+  parent: vm
+  name: 'AADLoginForWindows'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Azure.ActiveDirectory'
+    type: 'AADLoginForWindows'
+    typeHandlerVersion: '2.2'
+    autoUpgradeMinorVersion: true
+    settings: {
+      mdmId: ''
+    }
+  }
+}
+
 resource sessionHostAVDAgent 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
-  dependsOn: [
-    vm
-  ]
-  name: '${sessionHostName}/AVDAgent'
+  parent: vm
+  name: 'AVDAgent'
   location: location
   tags: tags
+  dependsOn: [
+    joinAAD
+  ]
   properties: {
     publisher: 'Microsoft.Powershell'
     type: 'DSC'
     typeHandlerVersion: '2.83'
-    // autoUpgradeMinorVersion: true
+    autoUpgradeMinorVersion: true
     settings: {
       modulesUrl: dscURL
       configurationFunction: 'Configuration.ps1\\AddSessionHost'
@@ -155,28 +175,13 @@ resource sessionHostAVDAgent 'Microsoft.Compute/virtualMachines/extensions@2024-
   }
 }
 
-resource sessionHostAADLogin 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
-  dependsOn: [
-    vm
-  ]
-  name: '${sessionHostName}/AADLoginForWindows'
-  location: location
-  tags: tags
-  properties: {
-    publisher: 'Microsoft.Azure.ActiveDirectory'
-    type: 'AADLoginForWindows'
-    typeHandlerVersion: '2.2'
-    autoUpgradeMinorVersion: true
-  }
-}
-
 resource guestAttestation 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = {
-  dependsOn: [
-    vm
-  ]
-  name: '${sessionHostName}/GuestAttestation'
-  // parent: vm
+  parent: vm
+  name: 'GuestAttestation'
   location: location
+  dependsOn: [
+    joinAAD
+  ]
   properties: {
     publisher: 'Microsoft.Azure.Security.WindowsAttestation'
     type: 'GuestAttestation'
